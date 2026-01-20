@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Walking Route Distance</title>
+  <title>Walking Route Example</title>
   <style>
     #map {
       height: 100vh;
@@ -18,81 +18,55 @@
       z-index: 5;
     }
   </style>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIj59yt8J4UnHqmCJaiXWFDiXpSwMOLOI&libraries=drawing,geometry"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIj59yt8J4UnHqmCJaiXWFDiXpSwMOLOI"></script>
 </head>
 <body>
 
 <div id="info">
-  <button onclick="startRoute()">Draw Route</button>
-  <button onclick="startBoundary()">Draw Boundary</button>
-  <button onclick="clearMap()">Clear</button>
-  <div id="distance">Distance: 0 km</div>
+  <div id="distance">Distance: -</div>
+  <div id="duration">Duration: -</div>
 </div>
 
 <div id="map"></div>
 
 <script>
-let map;
-let drawingManager;
-let currentOverlay = null;
+  function initMap() {
+    const origin = { lat: 37.97423920915172, lng: 23.72909764159293 };
+    const destination = { lat: 37.97029547339165, lng: 23.727821228882984 };
 
-function initMap() {
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 40.7128, lng: -74.0060 },
-    zoom: 14,
-  });
+    const map = new google.maps.Map(document.getElementById("map"), {
+      center: origin,
+      zoom: 15
+    });
 
-  drawingManager = new google.maps.drawing.DrawingManager({
-    drawingMode: null,
-    drawingControl: false,
-    drawingControlOptions: {
-      drawingModes: ["polyline", "polygon"]
-    },
-    polylineOptions: {
-      strokeColor: "#FF0000",
-      strokeWeight: 4
-    },
-    polygonOptions: {
-      fillColor: "#00FF00",
-      fillOpacity: 0.3,
-      strokeWeight: 2
-    }
-  });
+    const directionsService = new google.maps.DirectionsService();
+    const directionsRenderer = new google.maps.DirectionsRenderer({
+      map: map
+    });
 
-  drawingManager.setMap(map);
+    directionsService.route(
+      {
+        origin: origin,
+        destination: destination,
+        travelMode: google.maps.TravelMode.WALKING
+      },
+      (response, status) => {
+        if (status === "OK") {
+          directionsRenderer.setDirections(response);
 
-  google.maps.event.addListener(drawingManager, "overlaycomplete", function(event) {
-    if (currentOverlay) {
-      currentOverlay.setMap(null);
-    }
-    currentOverlay = event.overlay;
-
-    if (event.type === "polyline") {
-      const path = currentOverlay.getPath();
-      const distance = google.maps.geometry.spherical.computeLength(path);
-      document.getElementById("distance").innerText =
-        "Distance: " + (distance / 1000).toFixed(2) + " km";
-    }
-  });
-}
-
-function startRoute() {
-  drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
-}
-
-function startBoundary() {
-  drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
-}
-
-function clearMap() {
-  if (currentOverlay) {
-    currentOverlay.setMap(null);
-    currentOverlay = null;
-    document.getElementById("distance").innerText = "Distance: 0 km";
+          const route = response.routes[0].legs[0];
+          document.getElementById("distance").innerText =
+            "Distance: " + route.distance.text;
+          document.getElementById("duration").innerText =
+            "Duration: " + route.duration.text;
+        } else {
+          alert("Directions request failed due to " + status);
+        }
+      }
+    );
   }
-}
 
-initMap();
+  initMap();
 </script>
 
 </body>
