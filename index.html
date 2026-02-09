@@ -1,7 +1,7 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html>
 <head>
-  <title>Walking Route Example</title>
+  <title>Radial Walking Routes</title>
   <style>
     #map {
       height: 100vh;
@@ -16,6 +16,8 @@
       border-radius: 5px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
       z-index: 5;
+      max-height: 90vh;
+      overflow-y: auto;
     }
   </style>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIj59yt8J4UnHqmCJaiXWFDiXpSwMOLOI"></script>
@@ -23,51 +25,84 @@
 <body>
 
 <div id="info">
-  <div id="distance">Distance: -</div>
-  <div id="duration">Duration: -</div>
+  <b>Radial Walking Distances</b>
+  <div id="routes"></div>
 </div>
 
 <div id="map"></div>
 
 <script>
-  function initMap() {
-    const origin = { lat: 37.97423920915172, lng: 23.72909764159293 };
-    const destination = { lat: 37.97029547339165, lng: 23.727821228882984 };
+function initMap() {
+  const origin = { lat: 37.97423920915172, lng: 23.72909764159293 };
 
-    const map = new google.maps.Map(document.getElementById("map"), {
-      center: origin,
-      zoom: 15
-    });
+  const destinations = [
+    { lat: 37.97029547339165, lng: 23.727821228882984 },
+    { lat: 37.981547406843134, lng: 23.728731724593814 },
+    { lat: 37.97563279667814, lng: 23.721249807335120 }
+  ];
 
+  const map = new google.maps.Map(document.getElementById("map"), {
+    center: origin,
+    zoom: 15
+  });
+
+  // Marker origin
+  new google.maps.Marker({
+    position: origin,
+    map: map,
+    label: "O"
+  });
+
+  const routesDiv = document.getElementById("routes");
+
+  destinations.forEach((dest, index) => {
     const directionsService = new google.maps.DirectionsService();
     const directionsRenderer = new google.maps.DirectionsRenderer({
-      map: map
+      map: map,
+      suppressMarkers: false,
+      polylineOptions: {
+        strokeOpacity: 0.7
+      }
     });
 
     directionsService.route(
       {
         origin: origin,
-        destination: destination,
+        destination: dest,
         travelMode: google.maps.TravelMode.WALKING
       },
       (response, status) => {
         if (status === "OK") {
           directionsRenderer.setDirections(response);
 
-          const route = response.routes[0].legs[0];
-          document.getElementById("distance").innerText =
-            "Distance: " + route.distance.text;
-          document.getElementById("duration").innerText =
-            "Duration: " + route.duration.text;
+          const leg = response.routes[0].legs[0];
+
+          const p = document.createElement("div");
+          p.innerHTML = `
+            <b>Route ${index + 1}</b><br>
+            Distance: ${leg.distance.text}<br>
+            Duration: ${leg.duration.text}<br><hr>
+          `;
+          routesDiv.appendChild(p);
+
         } else {
-          alert("Directions request failed due to " + status);
+          console.error("Route error:", status);
         }
       }
     );
-  }
 
-  initMap();
+    // Marker destination
+    new google.maps.Marker({
+      position: dest,
+      map: map,
+      label: `${index + 1}`
+    });
+  });
+}
+
+initMap();
 </script>
 
 </body>
 </html>
+
