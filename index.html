@@ -56,15 +56,25 @@ function initMap() {
 
   const routesDiv = document.getElementById("routes");
 
+  const colors = [
+    "#ff0055",  // pink
+    "#00e5ff",  // cyan
+    "#7cff00",  // lime
+    "#ffb300"   // orange
+  ];
+
   destinations.forEach((dest, index) => {
     const directionsService = new google.maps.DirectionsService();
     const directionsRenderer = new google.maps.DirectionsRenderer({
       map: map,
       suppressMarkers: false,
       polylineOptions: {
-        strokeOpacity: 0.7
+        strokeOpacity: 0.9,
+        strokeWeight: 6,
+        strokeColor: colors[index]
       }
     });
+
 
     directionsService.route(
       {
